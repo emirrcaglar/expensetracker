@@ -25,6 +25,12 @@ def list_print(data_csv):
         for row in rows:
             print("#", " ".join(row))
 
+def print_list(data_csv):
+    rows = read_file(data_csv)
+    print('# ID\tDate\t\tDescription\tAmount')
+    for row in rows:
+        print('#',row[0],'\t',row[1],'\t',row[2],'\t\t',row[3])
+
 def find_max_id(data_csv):
     data = read_file(data_csv)
     maxid = 0
@@ -35,7 +41,7 @@ def find_max_id(data_csv):
 
 def add_data_to_file(data_csv, description, amount):
     now = datetime.now()
-    date = now.strftime("%m/%d/%Y, %H:%M:%S")
+    date = now.strftime("%Y-%m-%d")
     id = find_max_id(data_csv)
     csv_data = read_file(data_csv)
     new_row = [id, date, description, amount]
@@ -57,7 +63,7 @@ def delete_expense(data_csv, id=None, desc=None):
             for d in csv_data:
                 if desc != d[2]:
                     new_data.append(d)
-                else:
+                elif deleted_desc == False:
                     x = input(f"all items named ({desc}) will be deleted. (Y/n)") 
                     if x.lower() == 'y':
                         deleted_desc = True
@@ -76,11 +82,21 @@ def summary(data_csv):
         sum_amount += float(d[3])
     print("total expenses: $" + str(sum_amount))
 
+def update_expense(data_csv, id, desc=None, amount=None):
+    rows = read_file(data_csv)
+    for row in rows:
+        if int(row[0]) == id:
+            if desc is not None:
+                row[2] = desc
+            if amount is not None:
+                row[3] = amount
+    write_file(data_csv, rows)
+
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description="a cli app to track your expenses")
 
-    parser.add_argument('command', choices=['add', 'list', 'summary', 'delete'])
+    parser.add_argument('command', choices=['add', 'list', 'summary', 'delete', 'update'])
     parser.add_argument('-d', '--description', type=str, help="the expense")
     parser.add_argument('-a', '--amount', type=float, help="the amount of expense")
     parser.add_argument('-i', '--id', type=int, help="the id of expense")
@@ -94,7 +110,7 @@ def main():
     parser = parse_arguments()[1]
 
     if args.command == 'list':   
-        list_print(DATA_CSV)
+        print_list(DATA_CSV)
         parser.print_help()
     if args.command == 'add': 
         add_data_to_file(DATA_CSV, args.description, args.amount)
@@ -105,6 +121,8 @@ def main():
         summary(DATA_CSV)
         print()
         parser.print_help()
+    if args.command == 'update':
+        update_expense(DATA_CSV, args.id, args.description, args.amount)
 
 
 if __name__ == '__main__':
